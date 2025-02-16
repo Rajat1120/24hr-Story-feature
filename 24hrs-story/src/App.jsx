@@ -9,7 +9,7 @@ const App = () => {
   return (
     <context.Provider value={{ images, setImages }}>
       <div className="app">
-        <StroyHeader />
+        <StoryHeader />
       </div>
     </context.Provider>
   );
@@ -25,28 +25,51 @@ const saveImageToLocalStorage = (event, setImages) => {
 
   reader.onload = function () {
     const imageData = reader.result;
+    const timestamp = Date.now(); // Store current timestamp
 
-    //  Get existing images from localStorage
+    // Get existing images
     const existingImages =
       JSON.parse(localStorage.getItem("savedImages")) || [];
 
-    //  Add the new image
-    existingImages.push(imageData);
+    // Add new image with timestamp
+    existingImages.push({ imageData, timestamp });
 
-    //  Store updated array in localStorage
+    // Store updated array
     localStorage.setItem("savedImages", JSON.stringify(existingImages));
 
+    // Update state
     setImages(existingImages);
   };
 };
 
-const StroyHeader = () => {
+const StoryHeader = () => {
   const { setImages } = useContext(context);
 
   useEffect(() => {
-    const existingImages =
-      JSON.parse(localStorage.getItem("savedImages")) || [];
-    setImages(existingImages);
+    const removeExpiredImages = () => {
+      const now = Date.now();
+      const existingImages =
+        JSON.parse(localStorage.getItem("savedImages")) || [];
+
+      // Keep only images that are less than 24 hours old
+      const filteredImages = existingImages.filter(
+        (img) => now - img.timestamp < 24 * 60 * 60 * 1000
+      );
+
+      // Update localStorage if changes occurred
+      if (filteredImages.length !== existingImages.length) {
+        localStorage.setItem("savedImages", JSON.stringify(filteredImages));
+      }
+
+      setImages(filteredImages);
+    };
+
+    removeExpiredImages();
+
+    // Run cleanup every minute
+    const interval = setInterval(removeExpiredImages, 10 * 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   function helper(e) {
@@ -58,6 +81,7 @@ const StroyHeader = () => {
   const handleDivClick = () => {
     fileInputRef.current.click();
   };
+
   return (
     <div className="story-header">
       <div>
@@ -67,12 +91,12 @@ const StroyHeader = () => {
           ref={fileInputRef}
           style={{ display: "none" }}
           onChange={(e) => helper(e)}
-        ></input>
+        />
         <div onClick={handleDivClick} className="addCircleParent">
           <img className="addCircle" src={addCircle} alt="add image" />
         </div>
       </div>
-      <Stories></Stories>
+      <Stories />
     </div>
   );
 };
@@ -80,6 +104,7 @@ const StroyHeader = () => {
 const Stories = () => {
   const [activeIndex, setActiveIndex] = useState(null);
   const { images } = useContext(context);
+
   const handleStoryClick = (index) => {
     setActiveIndex(index);
   };
@@ -95,12 +120,16 @@ const Stories = () => {
   return (
     <div className="stories">
       {images.map((img, index) => (
-        <Story key={index} img={img} onClick={() => handleStoryClick(index)} />
+        <Story
+          key={index}
+          img={img.imageData}
+          onClick={() => handleStoryClick(index)}
+        />
       ))}
 
       {activeIndex !== null && (
         <FullscreenStory
-          images={images}
+          images={images.map((img) => img.imageData)}
           activeIndex={activeIndex}
           onNext={handleNextStory}
           setActiveIndex={setActiveIndex}

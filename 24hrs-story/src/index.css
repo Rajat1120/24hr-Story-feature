@@ -3,6 +3,7 @@
   border: 2px solid black;
 
   border-radius: 1rem;
+  overflow: hidden;
 
   position: relative;
 }
@@ -26,9 +27,6 @@ body {
 }
 
 .addCircle {
-  /* position: absolute; */
-  top: 0;
-  left: 0;
   background-color: #b3b3b3;
   width: 3.5rem;
   height: 3.5rem;
@@ -109,7 +107,7 @@ body {
   object-fit: cover;
   border-radius: 1rem;
   position: absolute;
-  top: 51%;
+  top: 50%;
   transform: translate(0%, -50%);
 }
 
@@ -153,17 +151,15 @@ body {
 
 @media (max-width: 520px) {
   .app {
-    min-width: 90vw;
-    min-height: 95vh;
-    width: 100%;
-    height: 100%;
+    width: 90vw;
+    height: 90vh;
+    max-height: 95vh;
   }
 
   .fullscreen-overlay img {
-    min-width: 95vw;
-    min-height: 90vh;
     width: 100%;
     height: 100%;
+    object-fit: cover;
     border-radius: 0.5rem;
   }
 }
